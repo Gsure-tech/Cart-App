@@ -1,10 +1,12 @@
 package com.gsuretech.OrderService.service.serviceImpl;
 
 import com.gsuretech.OrderService.entity.Order;
+import com.gsuretech.OrderService.exception.CustomException;
 import com.gsuretech.OrderService.external.client.PaymentService;
 import com.gsuretech.OrderService.external.client.ProductService;
 import com.gsuretech.OrderService.external.request.PaymentRequest;
 import com.gsuretech.OrderService.model.OrderRequest;
+import com.gsuretech.OrderService.model.OrderResponse;
 import com.gsuretech.OrderService.repository.OrderRepository;
 import com.gsuretech.OrderService.service.OrderService;
 import lombok.extern.log4j.Log4j2;
@@ -69,5 +71,24 @@ public class OrderServiceImpl implements OrderService {
 
         log.info("Order Placed successfully with Order Id: {}", order.getId());
         return order.getId();
+    }
+
+    @Override
+    public OrderResponse getOrderDetails(long orderId) {
+        log.info("Get order details for Order Id : {}", orderId);
+
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(()-> new CustomException("Order not found for the order id" + orderId, "NOT_FOUND", 404));
+
+        OrderResponse orderResponse
+                = OrderResponse.builder()
+                .orderId(order.getId())
+                .orderStatus(order.getOrderStatus())
+                .amount(order.getAmount())
+                .orderDate(order.getOrderDate())
+                .build();
+
+        return orderResponse;
+
     }
 }
