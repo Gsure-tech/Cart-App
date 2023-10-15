@@ -1,7 +1,9 @@
 package com.gsuretech.OrderService.service.serviceImpl;
 
 import com.gsuretech.OrderService.entity.Order;
+import com.gsuretech.OrderService.external.client.PaymentService;
 import com.gsuretech.OrderService.external.client.ProductService;
+import com.gsuretech.OrderService.external.request.PaymentRequest;
 import com.gsuretech.OrderService.model.OrderRequest;
 import com.gsuretech.OrderService.repository.OrderRepository;
 import com.gsuretech.OrderService.service.OrderService;
@@ -19,6 +21,9 @@ public class OrderServiceImpl implements OrderService {
     private OrderRepository orderRepository;
     @Autowired
     private ProductService productService;
+
+    @Autowired
+    private PaymentService paymentService;
 
     @Override
     public long placeOrder(OrderRequest orderRequest) {
@@ -39,6 +44,28 @@ public class OrderServiceImpl implements OrderService {
                 .build();
 
         order = orderRepository.save(order);
+
+        log.info("Calling Payment Service to complete the payment");
+
+        PaymentRequest paymentRequest
+                = PaymentRequest.builder()
+                .orderId(order.getId())
+                .paymentMode(orderRequest.getPaymentMode())
+                .amount(orderRequest.getTotalAmount())
+                .build();
+
+        String orderStatus = null;
+        try{
+            paymentService.doPayment(paymentRequest);
+            log.info("Payment done successfully. Changing the Order status to PLACED");
+            orderStatus = "PLACED";
+        }catch (Exception e){
+            log.error("Error occurred in payment. Changing order status to PAYMENT_FAILED");
+            orderStatus = "PAYMENT_FAILED";
+        }
+
+        order.setOrderStatus(orderStatus);
+        orderRepository.save(order);
 
         log.info("Order Placed successfully with Order Id: {}", order.getId());
         return order.getId();
