@@ -18,7 +18,6 @@ import java.time.Instant;
 @Service
 @Log4j2
 public class OrderServiceImpl implements OrderService {
-
     @Autowired
     private OrderRepository orderRepository;
     @Autowired
@@ -44,7 +43,6 @@ public class OrderServiceImpl implements OrderService {
                 .orderDate(Instant.now())
                 .quantity(orderRequest.getQuantity())
                 .build();
-
         order = orderRepository.save(order);
 
         log.info("Calling Payment Service to complete the payment");
@@ -78,7 +76,7 @@ public class OrderServiceImpl implements OrderService {
         log.info("Get order details for Order Id : {}", orderId);
 
         Order order = orderRepository.findById(orderId)
-                .orElseThrow(()-> new CustomException("Order not found for the order id" + orderId, "NOT_FOUND", 404));
+                .orElseThrow(()-> new CustomException("Order not found for the order id " + orderId, "NOT_FOUND", 404));
 
         OrderResponse orderResponse
                 = OrderResponse.builder()
