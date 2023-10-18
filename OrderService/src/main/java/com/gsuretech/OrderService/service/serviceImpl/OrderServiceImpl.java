@@ -12,6 +12,7 @@ import com.gsuretech.OrderService.service.OrderService;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 
 import java.time.Instant;
 
@@ -25,6 +26,9 @@ public class OrderServiceImpl implements OrderService {
 
     @Autowired
     private PaymentService paymentService;
+
+    @Autowired
+    private RestTemplate restTemplate;
 
     @Override
     public long placeOrder(OrderRequest orderRequest) {
@@ -78,12 +82,26 @@ public class OrderServiceImpl implements OrderService {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(()-> new CustomException("Order not found for the order id " + orderId, "NOT_FOUND", 404));
 
+        log.info("Invoking Product service to fetch the product for id : {}", order.getProductId());
+
+        OrderResponse.ProductDetails productResponse
+                = restTemplate.getForObject(
+                        "http://PRODUCT-SERVICE/product" + order.getProductId(),
+                OrderResponse.ProductDetails.class
+        );
+        OrderResponse.ProductDetails  productDetails
+                = OrderResponse.ProductDetails.builder()
+                .productName(productResponse.getProductName())
+                .productId(productResponse.getProductId())
+                .build();
+
         OrderResponse orderResponse
                 = OrderResponse.builder()
                 .orderId(order.getId())
                 .orderStatus(order.getOrderStatus())
                 .amount(order.getAmount())
                 .orderDate(order.getOrderDate())
+                .productDetails(productDetails)
                 .build();
 
         return orderResponse;
