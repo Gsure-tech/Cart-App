@@ -9,6 +9,7 @@ import com.gsuretech.OrderService.model.OrderRequest;
 import com.gsuretech.OrderService.model.OrderResponse;
 import com.gsuretech.OrderService.repository.OrderRepository;
 import com.gsuretech.OrderService.service.OrderService;
+import com.gsuretech.ProductService.model.ProductResponse;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -62,6 +63,7 @@ public class OrderServiceImpl implements OrderService {
         try{
             paymentService.doPayment(paymentRequest);
             log.info("Payment done successfully. Changing the Order status to PLACED");
+
             orderStatus = "PLACED";
         }catch (Exception e){
             log.error("Error occurred in payment. Changing order status to PAYMENT_FAILED");
@@ -84,11 +86,12 @@ public class OrderServiceImpl implements OrderService {
 
         log.info("Invoking Product service to fetch the product for id : {}", order.getProductId());
 
-        OrderResponse.ProductDetails productResponse
+        ProductResponse productResponse
                 = restTemplate.getForObject(
-                        "http://PRODUCT-SERVICE/product" + order.getProductId(),
-                OrderResponse.ProductDetails.class
+                "http://PRODUCT-SERVICE/product" + order.getProductId(),
+                ProductResponse.class
         );
+
         OrderResponse.ProductDetails  productDetails
                 = OrderResponse.ProductDetails.builder()
                 .productName(productResponse.getProductName())
