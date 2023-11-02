@@ -86,11 +86,13 @@ public class OrderServiceImpl implements OrderService {
 
         log.info("Invoking Product service to fetch the product for id : {}", order.getProductId());
 
+        //having issues here
         ProductResponse productResponse
                 = restTemplate.getForObject(
                 "http://PRODUCT-SERVICE/product" + order.getProductId(),
                 ProductResponse.class
         );
+
 
         OrderResponse.ProductDetails  productDetails
                 = OrderResponse.ProductDetails.builder()
